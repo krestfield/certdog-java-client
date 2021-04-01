@@ -121,13 +121,29 @@ public class Tests
         List<String> issuers = client.getIssuers();
 
         String csr = "-----BEGIN CERTIFICATE REQUEST-----MIICVDCCATwCAQAwDzENMAsGA1UEAwwEd2ViMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKfEuXgAokgdH8E4osq5za33uEe6zsoYU8ctBs8j+YJBcri1oFGoxG7rn09q9cmiQmqm3eDOa3wat8tiasnvtxU0GILjjhfhawBO4A/K7k5NwXn8/2Q42M9Ni5vDJXOZ1VQZkdzwc/Eb1555FwwydrU2rg3wk2c1ijXddIXVGonIFPdnoYcg+ZqfjTOpkvMzAUMsAbhYYqu7DWNBaX6ZoB4GrvC726uYCmsrYccW6g1G+zHuZp9pPfeUGZvCdrLdNEAYsrwYyPJkUDtQ7UtpXbcXYrRQWTykAe6c+V4QDqLSpKK8EtGm3RmrTI7wgYQyfrkZPJxMveKr/Lg9N5GnmQECAwEAAaAAMA0GCSqGSIb3DQEBCwUAA4IBAQBdQx721gXBmZZG3F5P6oAAwTDiNj0ewY/xWEQf9Hc19y9gUstGDQkljWqJletEEKDu/T/KhxrT0bqJWxppZSPQ1GgDjDOGD43bOWRWNlqhCyg26KNshYaE0dVODmGjzVufBHhkeCV48CjDSrhbC2/tpg0Hkd/VVnCCQhR4IHFbZ+MXO6csY4poZ00okPbjFV6CW/SpBgR5bU2pAztSOptW7UYivMtIvwP3dXiBCMdgHsrQiUrpTBLuun6sSxShyn+21cQ+w/C11Jw/MJCzHvokd38fCUDcXjlJe96AhgPDL3PO991HgoFiCUHxFrct4bZi0gx0C3vv3IYVEIcfbvBX-----END CERTIFICATE REQUEST-----";
-        String certData = client.requestCertFromCsr(issuers.get(0), teamNames.get(0), csr, null, null);
-        X509Certificate c = CertdogClient.GetCertFromData(certData);
 
-        System.out.println("\nCert issued from CSR OK. Cert Data:\n" + certData);
+        X509Certificate c = client.requestCertFromCsr(issuers.get(0), teamNames.get(0), csr, null, null);
 
-        CertdogClient.SaveCert(certData, SAVEFOLDER + "certdog.cer");
+        //System.out.println("\nCert issued from CSR OK. Cert Data:\n" + certData);
+
+        CertdogClient.SaveCert(c, SAVEFOLDER + "certdog.cer");
         System.out.println("Saved to " + SAVEFOLDER + "certdog.cer");
+
+        client.logout();
+    }
+
+    @Test
+    public void getIssuerChain() throws Exception
+    {
+        CertdogClient client = new CertdogClient(APIURL);
+        client.login(APIUSER, APIPASS);
+
+        List<String> issuers = client.getIssuers();
+        List<X509Certificate> chain = client.getIssuerChain(issuers.get(0));
+        for (X509Certificate c : chain)
+        {
+            System.out.println(c.getSubjectDN());
+        }
 
         client.logout();
     }
@@ -142,8 +158,8 @@ public class Tests
         List<String> issuers = client.getIssuers();
 
         String csr = "-----BEGIN CERTIFICATE REQUEST-----MIICVDCCATwCAQAwDzENMAsGA1UEAwwEd2ViMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKfEuXgAokgdH8E4osq5za33uEe6zsoYU8ctBs8j+YJBcri1oFGoxG7rn09q9cmiQmqm3eDOa3wat8tiasnvtxU0GILjjhfhawBO4A/K7k5NwXn8/2Q42M9Ni5vDJXOZ1VQZkdzwc/Eb1555FwwydrU2rg3wk2c1ijXddIXVGonIFPdnoYcg+ZqfjTOpkvMzAUMsAbhYYqu7DWNBaX6ZoB4GrvC726uYCmsrYccW6g1G+zHuZp9pPfeUGZvCdrLdNEAYsrwYyPJkUDtQ7UtpXbcXYrRQWTykAe6c+V4QDqLSpKK8EtGm3RmrTI7wgYQyfrkZPJxMveKr/Lg9N5GnmQECAwEAAaAAMA0GCSqGSIb3DQEBCwUAA4IBAQBdQx721gXBmZZG3F5P6oAAwTDiNj0ewY/xWEQf9Hc19y9gUstGDQkljWqJletEEKDu/T/KhxrT0bqJWxppZSPQ1GgDjDOGD43bOWRWNlqhCyg26KNshYaE0dVODmGjzVufBHhkeCV48CjDSrhbC2/tpg0Hkd/VVnCCQhR4IHFbZ+MXO6csY4poZ00okPbjFV6CW/SpBgR5bU2pAztSOptW7UYivMtIvwP3dXiBCMdgHsrQiUrpTBLuun6sSxShyn+21cQ+w/C11Jw/MJCzHvokd38fCUDcXjlJe96AhgPDL3PO991HgoFiCUHxFrct4bZi0gx0C3vv3IYVEIcfbvBX-----END CERTIFICATE REQUEST-----";
-        String certData = client.requestCertFromCsr(issuers.get(0), teamNames.get(0), csr, null, null);
-        X509Certificate c = CertdogClient.GetCertFromData(certData);
+
+        X509Certificate c = client.requestCertFromCsr(issuers.get(0), teamNames.get(0), csr, null, null);
 
         client.revokeCert(issuers.get(0), c, RevocationReason.CesationOfOperation);
         System.out.println("\nCert revoked OK\n");

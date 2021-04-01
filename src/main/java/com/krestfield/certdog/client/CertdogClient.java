@@ -17,13 +17,16 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -309,10 +312,10 @@ public class CertdogClient
      * @param csrData the CSR data
      * @param extraInfo Any extra free text to be associated with the certificate
      * @param extraEmails Additional emails to send renewal reminders and issue emails
-     * @return the PEM formatted certificate. Use GetCertFromData to get a X509Certificate and SaveCert to save
+     * @return An X509Certificate
      * @throws CertdogException
      */
-    public String requestCertFromCsr(String issuerName, String teamName, String csrData,
+    public X509Certificate requestCertFromCsr(String issuerName, String teamName, String csrData,
                                      String extraInfo, List<String> extraEmails) throws CertdogException
     {
         if (!loggedIn)
@@ -333,12 +336,31 @@ public class CertdogClient
                     .header("Authorization", "Bearer " + authToken)
                     .post(Entity.entity(certReq, MediaType.APPLICATION_JSON), GetCertFromCsrResponse.class);
 
-            return resp.getPemCert();
+            return GetCertFromData(resp.getPemCert());
         }
         catch (Exception e)
         {
             throw new CertdogException("Requesting certificate from CSR failed. " + e.getMessage());
         }
+    }
+
+    public List<X509Certificate> getIssuerChain(String issuerName) throws CertdogException
+    {
+        String path = String.format(CertdogEndpoints.ISSUER_CHAIN, issuerName);
+
+        List<String> certs = target
+                .path(path)
+                .request(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + authToken)
+                .get(new GenericType<List<String>>(){});
+
+        List<X509Certificate> x509Certs = new ArrayList<>();
+        for (String cert : certs)
+        {
+            x509Certs.add(GetCertFromData(cert));
+        }
+
+        return x509Certs;
     }
 
     /**
@@ -448,15 +470,22 @@ public class CertdogClient
     /**
      * Saves the data as returned from RequestCertFromCsr to a file
      *
-     * @param certData the certificate data
+     * @param cert the certificate to save
      * @param filename the filename to save the data
      * @throws CertdogException
      */
-    public static void SaveCert(String certData, String filename) throws CertdogException
+    public static void SaveCert(X509Certificate cert, String filename) throws CertdogException
     {
         try
         {
-            Files.write(Paths.get(filename), certData.getBytes(StandardCharsets.UTF_8));
+            StringWriter sw = new StringWriter();
+                String nl = System.lineSeparator();
+                sw.write(CERT_HEADER + nl);
+                sw.write(DatatypeConverter.printBase64Binary(cert.getEncoded()).replaceAll("(.{64})", "$1" + nl));
+                sw.write(nl + CERT_FOOTER + nl);
+                String pemData = sw.toString();
+
+            Files.write(Paths.get(filename), pemData.getBytes(StandardCharsets.UTF_8));
         }
         catch (Exception e)
         {
@@ -471,7 +500,7 @@ public class CertdogClient
      * @return A certificate object
      * @throws CertdogException
      */
-    public static X509Certificate GetCertFromData(String certData) throws CertdogException
+    private static X509Certificate GetCertFromData(String certData) throws CertdogException
     {
         try
         {

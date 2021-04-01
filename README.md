@@ -51,15 +51,25 @@ String dn = "CN=domain.com,O=Some org"
 
 // Add Subject Alternative Names in this format:
 // DNS:[dnsname.com],IP[IP Address],EMAIL:[Email Address]
+// pass null for no SANs    
 ArrayList<String> sans = new ArrayList<>();
 sans.add("DNS:domain.com");
 
 // The password to protect the returned P12/PFX data
 String p12Password = "password"
+
+// Optionally, pass extra information to be stored with the cert
+// For no info, pass null    
+String extraInfo = "This is a test cert"    
     
-// Request the cert. Other response options are: JKS and PEM (PKCS#8)
+// And additional emails to be sent the cert and reminders    
+// For no extra emails, pass null    
+ArrayList<String> extraEmails = new ArrayList<>();
+extraEmails.add("networks@domain.com");
+    
+// Request the cert. Other response formats are: JKS and PEM (PKCS#8)
 String p12Data = client.requestCert(certIssuer, csrGenerator, team,
-                     dn, p12Password, sans, null, null, ResponseFormat.PKCS12);
+                     dn, p12Password, sans, extraInfo, extraEmails, ResponseFormat.PKCS12);
 ```
 
 
@@ -78,24 +88,17 @@ To request a certificate from a CSR
 
 ```java
 String csr = "-----BEGIN CERTIFICATE REQUEST-----MIICVDC...IcfbvBX-----END CERTIFICATE REQUEST-----";
-String certData = client.requestCertFromCsr(certIssuer, team, csr, null, null);
+X509Certificate cert = client.requestCertFromCsr(certIssuer, team, csr, extraInfo, extraEmails);
 ```
 
 
 
-Save as a cert
+Save
 
 ```java
-CertdogClient.SaveCert(certData, "C:/temp/certdog.cer")
+CertdogClient.SaveCert(cert, "C:/temp/certdog.cer")
 ```
 
-
-
-Or just get the returned data as an X509Certificate
-
-```java
-X509Certificate cert = CertdogClient.GetCertFromData(certData);
-```
 
 
 

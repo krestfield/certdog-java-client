@@ -15,4 +15,5 @@ public class CertdogEndpoints
     public static final String CERT_PEM_DATA = "certs/%s/pem";
     public static final String CERT_REQ_CSR = "certs/requestp10";
     public static final String REVOKE_CERT = "certs/revoke";
+    public static final String ISSUER_CHAIN = "admin/ca/chainbyname/%s";
 }
