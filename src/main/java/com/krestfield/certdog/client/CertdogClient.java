@@ -88,6 +88,7 @@ public class CertdogClient
         }
     }
 
+    // Mappings between the revocation name and ID
     HashMap<Integer, String> revokeReasons = new HashMap<Integer, String>(){{
         put(RevocationReason.Unspecified.value, "unspecified");
         put(RevocationReason.KeyCompromise.value, "key compromise");
@@ -98,6 +99,7 @@ public class CertdogClient
         put(RevocationReason.Hold.value, "hold");
     }};
 
+    // Possible return formats for the certificate
     public enum ResponseFormat
     {
         PKCS12,
@@ -150,7 +152,7 @@ public class CertdogClient
     /**
      * Logout of the certdog API
      *
-     * @throws CertdogException
+     * @throws CertdogException if logout fails
      */
     public void logout() throws CertdogException
     {
@@ -172,8 +174,8 @@ public class CertdogClient
      * Returns a list of teams that the current logged in user
      * is a member of
      *
-     * @return
-     * @throws CertdogException
+     * @return an array of the team names
+     * @throws CertdogException if there is an error obtaining
      */
     public List<String> getTeams() throws CertdogException
     {
@@ -195,8 +197,8 @@ public class CertdogClient
      * Returns a list of issuer names that the current logged in user
      * has permissions to request certificates from
      *
-     * @return
-     * @throws CertdogException
+     * @return an array of the issuer names
+     * @throws CertdogException if there is an error obtaining
      */
     public List<String> getIssuers() throws CertdogException
     {
@@ -216,8 +218,8 @@ public class CertdogClient
      * Returns a list of CSR generators that can be referenced when
      * requesting a certificate
      *
-     * @return
-     * @throws CertdogException
+     * @return an array of the generator names
+     * @throws CertdogException if there is an error obtaining
      */
     public List<String> getGenerators() throws CertdogException
     {
@@ -250,7 +252,7 @@ public class CertdogClient
      * @param extraEmails Additional emails to send renewal reminders and issue emails
      * @param format The return format - PKCS12/JKS or PEM
      * @return the PKCS12/PFX data, base64 encoded. Use SaveP12 to save to a PFX/P12 file for import
-     * @throws CertdogException
+     * @throws CertdogException if there is an error obtaining the cert
      */
     public String requestCert(String issuerName, String generatorName, String teamName,
                               String dn, String password, List<String> sans,
@@ -313,7 +315,7 @@ public class CertdogClient
      * @param extraInfo Any extra free text to be associated with the certificate
      * @param extraEmails Additional emails to send renewal reminders and issue emails
      * @return An X509Certificate
-     * @throws CertdogException
+     * @throws CertdogException if there is an error obtaining the cert
      */
     public X509Certificate requestCertFromCsr(String issuerName, String teamName, String csrData,
                                      String extraInfo, List<String> extraEmails) throws CertdogException
@@ -344,6 +346,13 @@ public class CertdogClient
         }
     }
 
+    /**
+     * Gets the cert chain for the cert issuer
+     *
+     * @param issuerName the name of the cert issuer
+     * @return an array of X509Certificate - intermediate and root CAs
+     * @throws CertdogException if there is an error obtaining the certificates
+     */
     public List<X509Certificate> getIssuerChain(String issuerName) throws CertdogException
     {
         String path = String.format(CertdogEndpoints.ISSUER_CHAIN, issuerName);
@@ -369,7 +378,7 @@ public class CertdogClient
      * @param issuerName the cert issuer name - must be the same as the cert was issued from
      * @param cert the certificate
      * @param reason the revocation reason
-     * @throws CertdogException
+     * @throws CertdogException if there is an error revoking
      */
     public void revokeCert(String issuerName, X509Certificate cert, RevocationReason reason) throws CertdogException
     {
@@ -382,7 +391,7 @@ public class CertdogClient
      * @param issuerName the cert issuer name - must be the same as the cert was issued from
      * @param serialNumber the serial number in ASCII HEX format
      * @param reason the revocation reason
-     * @throws CertdogException
+     * @throws CertdogException if there is an error revoking
      */
     public void revokeCert(String issuerName, String serialNumber, RevocationReason reason) throws CertdogException
     {
@@ -420,7 +429,7 @@ public class CertdogClient
      *
      * @param p12B64Data the base64 p12/pfx data
      * @param filename the filename to save the data
-     * @throws CertdogException
+     * @throws CertdogException if there is an error saving
      */
     public static void SaveP12(String p12B64Data, String filename) throws CertdogException
     {
@@ -441,7 +450,7 @@ public class CertdogClient
      *
      * @param jksB64Data the base64 encoded JKS data
      * @param filename the filename to save the data
-     * @throws CertdogException
+     * @throws CertdogException if there is an error saving
      */
     public static void SaveJks(String jksB64Data, String filename) throws CertdogException
     {
@@ -453,7 +462,7 @@ public class CertdogClient
      *
      * @param pemData the PEM data
      * @param filename the filename to save the data
-     * @throws CertdogException
+     * @throws CertdogException if there is an error saving
      */
     public static void SavePem(String pemData, String filename) throws CertdogException
     {
@@ -472,7 +481,7 @@ public class CertdogClient
      *
      * @param cert the certificate to save
      * @param filename the filename to save the data
-     * @throws CertdogException
+     * @throws CertdogException if there is an error saving
      */
     public static void SaveCert(X509Certificate cert, String filename) throws CertdogException
     {
@@ -498,7 +507,7 @@ public class CertdogClient
      *
      * @param certData The cert data
      * @return A certificate object
-     * @throws CertdogException
+     * @throws CertdogException if there is an encoding error
      */
     private static X509Certificate GetCertFromData(String certData) throws CertdogException
     {
@@ -522,3 +531,5 @@ public class CertdogClient
         }
     }
 }
+/********************************************* END OF FILE *****************************************************
+ ***************************************************************************************************************/
