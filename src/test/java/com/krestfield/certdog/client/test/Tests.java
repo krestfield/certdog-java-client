@@ -57,7 +57,10 @@ public class Tests
 
         String p12Data = client.requestCert(issuers.get(0), generators.get(0), teamNames.get(0),
                 "CN=client p12 test", "password", null, null, null, ResponseFormat.PKCS12);
+        p12Data = client.requestCert(issuers.get(0), generators.get(0), teamNames.get(0),
+                "CN=client p12 test", "password", null, ResponseFormat.PKCS12);
         System.out.println("\nCert issued OK. P12 Data:\n" + p12Data);
+
 
         CertdogClient.SaveP12(p12Data, SAVEFOLDER + "certdog.pfx");
         System.out.println("Saved to " + SAVEFOLDER + "certdog.pfx");
@@ -123,6 +126,9 @@ public class Tests
         String csr = "-----BEGIN CERTIFICATE REQUEST-----MIICVDCCATwCAQAwDzENMAsGA1UEAwwEd2ViMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKfEuXgAokgdH8E4osq5za33uEe6zsoYU8ctBs8j+YJBcri1oFGoxG7rn09q9cmiQmqm3eDOa3wat8tiasnvtxU0GILjjhfhawBO4A/K7k5NwXn8/2Q42M9Ni5vDJXOZ1VQZkdzwc/Eb1555FwwydrU2rg3wk2c1ijXddIXVGonIFPdnoYcg+ZqfjTOpkvMzAUMsAbhYYqu7DWNBaX6ZoB4GrvC726uYCmsrYccW6g1G+zHuZp9pPfeUGZvCdrLdNEAYsrwYyPJkUDtQ7UtpXbcXYrRQWTykAe6c+V4QDqLSpKK8EtGm3RmrTI7wgYQyfrkZPJxMveKr/Lg9N5GnmQECAwEAAaAAMA0GCSqGSIb3DQEBCwUAA4IBAQBdQx721gXBmZZG3F5P6oAAwTDiNj0ewY/xWEQf9Hc19y9gUstGDQkljWqJletEEKDu/T/KhxrT0bqJWxppZSPQ1GgDjDOGD43bOWRWNlqhCyg26KNshYaE0dVODmGjzVufBHhkeCV48CjDSrhbC2/tpg0Hkd/VVnCCQhR4IHFbZ+MXO6csY4poZ00okPbjFV6CW/SpBgR5bU2pAztSOptW7UYivMtIvwP3dXiBCMdgHsrQiUrpTBLuun6sSxShyn+21cQ+w/C11Jw/MJCzHvokd38fCUDcXjlJe96AhgPDL3PO991HgoFiCUHxFrct4bZi0gx0C3vv3IYVEIcfbvBX-----END CERTIFICATE REQUEST-----";
 
         X509Certificate c = client.requestCertFromCsr(issuers.get(0), teamNames.get(0), csr, null, null);
+        System.out.println("\nCert issued:" + c.getSubjectDN());
+        X509Certificate c2 = client.requestCertFromCsr(issuers.get(0), teamNames.get(0), csr);
+        System.out.println("\nCert issued:" + c2.getSubjectDN());
 
         //System.out.println("\nCert issued from CSR OK. Cert Data:\n" + certData);
 

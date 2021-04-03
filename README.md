@@ -15,7 +15,7 @@ More info on this client: <https://krestfield.github.io/docs/certdog/java_client
 
 ### Usage
 
-Create the client
+Create the client, passing the API URL
 
 ```java
 CertdogClient client = new CertdogClient("https://certdog.net/certdog/api");
@@ -23,53 +23,61 @@ CertdogClient client = new CertdogClient("https://certdog.net/certdog/api");
 
 
 
-Login
+Login with the api username and password
 
 ```java
-// Login with your API username and password
 client.login("certdogtest", "password");
 ```
 
 
 
-Request a cert from a DN
+To request a certificate from a CSR provide
+
+1. The name of the cert issuer (as configured in certdog - use ``clien.getIssuers()`` to get all available issuers)
+2. The name of the team you wish this certificate to be associated with
+3. The CSR
 
 ```java
-// The issuer that is configured in certdog - this may be a 
-// Microsoft CA, EJBCA or Internal CA
 String certIssuer = "Certdog TLS"
+String team = "Test Team"
+String csr = "-----BEGIN CERTIFICATE REQUEST-----MIICVDC...IcfbvBX-----END CERTIFICATE REQUEST-----";
 
-// When requesting via a DN, certdog generates the CSR for you
-// This is the name of the configured generator    
+X509Certificate cert = client.requestCertFromCsr(certIssuer, team, csr);
+```
+
+
+
+Save
+
+```java
+CertdogClient.SaveCert(cert, "C:/temp/certdog.cer")
+```
+
+
+
+Request a cert from a DN. As well as the cert issuer and team, you also need to provide:
+
+1. The CSR generator name. This is the generator that will create the CSR for you (use ``client.getGenerators()`` to get all available generators)
+2. The requested DN
+3. Any Subject Alternative Names
+4. The password to protect the returned P12, JKS, PEM
+
+```java
 String csrGenerator = "RSA2048"    
-
-// The team this certificate will be associated with    
-String team = "Test Team"     
-
-// The requested DN    
 String dn = "CN=domain.com,O=Some org"
 
 // Add Subject Alternative Names in this format:
-// DNS:[dnsname.com],IP[IP Address],EMAIL:[Email Address]
+// DNS:[dnsname.com],IP:[IP Address],EMAIL:[Email Address]
 // pass null for no SANs    
 ArrayList<String> sans = new ArrayList<>();
 sans.add("DNS:domain.com");
+sans.add("DNS:domain2.com");
 
-// The password to protect the returned P12/PFX data
 String p12Password = "password"
-
-// Optionally, pass extra information to be stored with the cert
-// For no info, pass null    
-String extraInfo = "This is a test cert"    
-    
-// And additional emails to be sent the cert and reminders    
-// For no extra emails, pass null    
-ArrayList<String> extraEmails = new ArrayList<>();
-extraEmails.add("networks@domain.com");
-    
+   
 // Request the cert. Other response formats are: JKS and PEM (PKCS#8)
 String p12Data = client.requestCert(certIssuer, csrGenerator, team,
-                     dn, p12Password, sans, extraInfo, extraEmails, ResponseFormat.PKCS12);
+                     dn, p12Password, sans, ResponseFormat.PKCS12);
 ```
 
 
@@ -84,25 +92,8 @@ You can now import this into your local certificate store
 
 
 
-To request a certificate from a CSR
 
-```java
-String csr = "-----BEGIN CERTIFICATE REQUEST-----MIICVDC...IcfbvBX-----END CERTIFICATE REQUEST-----";
-X509Certificate cert = client.requestCertFromCsr(certIssuer, team, csr, extraInfo, extraEmails);
-```
-
-
-
-Save
-
-```java
-CertdogClient.SaveCert(cert, "C:/temp/certdog.cer")
-```
-
-
-
-
-Revoke the certificate
+Revoke a certificate
 
 ```java
 client.revokeCert(certIssuer, cert, RevocationReason.CesationOfOperation);

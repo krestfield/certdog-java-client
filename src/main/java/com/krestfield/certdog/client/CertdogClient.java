@@ -57,7 +57,7 @@ import java.util.stream.Collectors;
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL KRESTFIELD BE LIABLE FOR ANY DIRECT, INDIRECT,
  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
@@ -124,7 +124,7 @@ public class CertdogClient
      *
      * @param username - the certdog username
      * @param password - the certdog password
-     * @throws CertdogException
+     * @throws CertdogException if login fails
      */
     public void login(String username, String password) throws CertdogException
     {
@@ -248,6 +248,28 @@ public class CertdogClient
      * @param dn the requested Dn
      * @param password the password that will protect the P12/JKS/PEM
      * @param sans An array of Subject Alternative Names. In the form DNS:[dns name],EMAIL:[email],IP:[ip address]
+     * @param format The return format - PKCS12/JKS or PEM
+     * @return the PKCS12/PFX data, base64 encoded. Use SaveP12 to save to a PFX/P12 file for import
+     * @throws CertdogException if there is an error obtaining the cert
+     */
+    public String requestCert(String issuerName, String generatorName, String teamName,
+                              String dn, String password, List<String> sans,
+                              ResponseFormat format) throws CertdogException
+    {
+        return requestCert(issuerName, generatorName, teamName, dn, password, sans, null, null, format);
+    }
+
+    /**
+     * Request a certificate from a DN
+     * Note: This will use certdog to generate a CSR. If you want to generate the CSR locally and send to
+     * certdog for processing, use the RequestCertFromCsr method instead
+     *
+     * @param issuerName the cert issuer to process the request
+     * @param generatorName the CSR generator to create the CSR
+     * @param teamName the team this certificate will be associated with
+     * @param dn the requested Dn
+     * @param password the password that will protect the P12/JKS/PEM
+     * @param sans An array of Subject Alternative Names. In the form DNS:[dns name],EMAIL:[email],IP:[ip address]
      * @param extraInfo Any extra free text to be associated with the certificate
      * @param extraEmails Additional emails to send renewal reminders and issue emails
      * @param format The return format - PKCS12/JKS or PEM
@@ -304,6 +326,20 @@ public class CertdogClient
         {
             throw new CertdogException("Requesting certificate with DN '" + dn + "' failed. " + e.getMessage());
         }
+    }
+
+    /**
+     * Requests a certificate from a pre-generated CSR
+     *
+     * @param issuerName the cert issuer to process the request
+     * @param teamName the team this certificate will be associated with
+     * @param csrData the CSR data
+     * @return An X509Certificate
+     * @throws CertdogException if there is an error obtaining the cert
+     */
+    public X509Certificate requestCertFromCsr(String issuerName, String teamName, String csrData) throws CertdogException
+    {
+        return requestCertFromCsr(issuerName, teamName, csrData, null, null);
     }
 
     /**
