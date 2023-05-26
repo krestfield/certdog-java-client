@@ -11,8 +11,10 @@ import java.util.List;
 
 public class Tests
 {
-    public static final String APIURL = "http://127.0.0.1:8081/api";
-    public static final String APIUSER = "admin";
+    //public static final String APIURL = "http://127.0.0.1:8081/api";
+    public static final String APIURL = "https://certdog.net/certdog/api";
+    //public static final String APIUSER = "admin";
+    public static final String APIUSER = "certdogtest";
     public static final String APIPASS = "password";
     public static final String SAVEFOLDER = "C:/temp/";
 
