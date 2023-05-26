@@ -98,7 +98,7 @@ public class Tests
     public void externallyManagedAuthToken() throws Exception
     {
         CertdogClient client = new CertdogClient(APIURL);
-        String authToken = client.loginRaw(APIUSER, APIPASS);
+        String authToken = client.loginExt(APIUSER, APIPASS);
 
         List<String> teamNames = client.getTeams(authToken);
         List<String> issuers = client.getIssuers(authToken);

@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
  * https://www.krestfield.com/certdog
  * support@krestfield.com
  *
- * Copyright (c) 2021, Krestfield Limited
+ * Copyright (c) 2023, Krestfield Limited
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted
@@ -128,10 +128,21 @@ public class CertdogClient
     public void login(String username, String password) throws CertdogException
     {
         this.loggedIn = false;
-        this.authToken = loginRaw(username, password);
+        this.authToken = loginExt(username, password);
         this.loggedIn = true;
     }
-    public String loginRaw(String username, String password) throws CertdogException
+
+    /**
+     * Login to the API
+     * This returns the JWT that must be managed by the calling application and provided
+     * to all subsequent calls
+     *
+     * @param username - the certdog username
+     * @param password - the certdog password
+     * @return The JWT authentication token
+     * @throws CertdogException if login fails
+     */
+    public String loginExt(String username, String password) throws CertdogException
     {
         try
         {
@@ -165,6 +176,12 @@ public class CertdogClient
         logout(this.authToken);
     }
 
+    /**
+     * Logout of the certdog API
+     *
+     * @param authToken the JWT authentication token, returned from loginExt
+     * @throws CertdogException if logout fails
+     */
     public void logout(String authToken) throws CertdogException
     {
         Response resp = target.path(CertdogEndpoints.LOGOUT)
@@ -193,6 +210,14 @@ public class CertdogClient
         return getTeams(this.authToken);
     }
 
+    /**
+     * Returns a list of teams that the current logged in user
+     * is a member of
+     *
+     * @param authToken the JWT authentication token, returned from loginExt
+     * @return an array of the team names
+     * @throws CertdogException if there is an error obtaining
+     */
     public List<String> getTeams(String authToken) throws CertdogException
     {
         List<TeamsResponse> teams = target
@@ -221,6 +246,14 @@ public class CertdogClient
         return getIssuers(this.authToken);
     }
 
+    /**
+     * Returns a list of issuer names that the current logged in user
+     * has permissions to request certificates from
+     *
+     * @param authToken the JWT authentication token, returned from loginExt
+     * @return an array of the issuer names
+     * @throws CertdogException if there is an error obtaining
+     */
     public List<String> getIssuers(String authToken) throws CertdogException
     {
         List<String> issuerNames = target
@@ -247,6 +280,14 @@ public class CertdogClient
         return getGenerators(this.authToken);
     }
 
+    /**
+     * Returns a list of CSR generators that can be referenced when
+     * requesting a certificate
+     *
+     * @param authToken the JWT authentication token, returned from loginExt
+     * @return an array of the generator names
+     * @throws CertdogException if there is an error obtaining
+     */
     public List<String> getGenerators(String authToken) throws CertdogException
     {
 
@@ -283,6 +324,22 @@ public class CertdogClient
         return requestCert(this.authToken, issuerName, generatorName, teamName, dn, password, sans, format);
     }
 
+    /**
+     * Request a certificate from a DN
+     * Note: This will use certdog to generate a CSR. If you want to generate the CSR locally and send to
+     * certdog for processing, use the RequestCertFromCsr method instead
+     *
+     * @param authToken the JWT authentication token, returned from loginExt
+     * @param issuerName the cert issuer to process the request
+     * @param generatorName the CSR generator to create the CSR
+     * @param teamName the team this certificate will be associated with
+     * @param dn the requested Dn
+     * @param password the password that will protect the P12/JKS/PEM
+     * @param sans An array of Subject Alternative Names. In the form DNS:[dns name],EMAIL:[email],IP:[ip address]
+     * @param format The return format - PKCS12/JKS or PEM
+     * @return the PKCS12/PFX data, base64 encoded. Use SaveP12 to save to a PFX/P12 file for import
+     * @throws CertdogException if there is an error obtaining the cert
+     */
     public String requestCert(String authToken, String issuerName, String generatorName, String teamName,
                               String dn, String password, List<String> sans,
                               ResponseFormat format) throws CertdogException
@@ -317,6 +374,24 @@ public class CertdogClient
         return requestCert(this.authToken, issuerName, generatorName, teamName, dn, password, sans, extraInfo, extraEmails, format);
     }
 
+    /**
+     * Request a certificate from a DN, providing the authentication token
+     * Note: This will use certdog to generate a CSR. If you want to generate the CSR locally and send to
+     * certdog for processing, use the RequestCertFromCsr method instead
+     *
+     * @param authToken the JWT authentication token, returned from loginExt
+     * @param issuerName the cert issuer to process the request
+     * @param generatorName the CSR generator to create the CSR
+     * @param teamName the team this certificate will be associated with
+     * @param dn the requested Dn
+     * @param password the password that will protect the P12/JKS/PEM
+     * @param sans An array of Subject Alternative Names. In the form DNS:[dns name],EMAIL:[email],IP:[ip address]
+     * @param extraInfo Any extra free text to be associated with the certificate
+     * @param extraEmails Additional emails to send renewal reminders and issue emails
+     * @param format The return format - PKCS12/JKS or PEM
+     * @return the PKCS12/PFX data, base64 encoded. Use SaveP12 to save to a PFX/P12 file for import
+     * @throws CertdogException if there is an error obtaining the cert
+     */
     public String requestCert(String authToken, String issuerName, String generatorName, String teamName,
                               String dn, String password, List<String> sans,
                               String extraInfo, List<String> extraEmails, ResponseFormat format) throws CertdogException
@@ -380,6 +455,16 @@ public class CertdogClient
         return requestCertFromCsr(this.authToken, issuerName, teamName, csrData);
     }
 
+    /**
+     * Requests a certificate from a pre-generated CSR
+     *
+     * @param authToken the JWT authentication token, returned from loginExt
+     * @param issuerName the cert issuer to process the request
+     * @param teamName the team this certificate will be associated with
+     * @param csrData the CSR data
+     * @return An X509Certificate
+     * @throws CertdogException if there is an error obtaining the cert
+     */
     public X509Certificate requestCertFromCsr(String authToken, String issuerName, String teamName, String csrData) throws CertdogException
     {
         return requestCertFromCsr(authToken, issuerName, teamName, csrData, null, null);
@@ -405,6 +490,18 @@ public class CertdogClient
         return requestCertFromCsr(this.authToken, issuerName, teamName, csrData, extraInfo, extraEmails);
     }
 
+    /**
+     * Requests a certificate from a pre-generated CSR
+     *
+     * @param authToken the JWT authentication token, returned from loginExt
+     * @param issuerName the cert issuer to process the request
+     * @param teamName the team this certificate will be associated with
+     * @param csrData the CSR data
+     * @param extraInfo Any extra free text to be associated with the certificate
+     * @param extraEmails Additional emails to send renewal reminders and issue emails
+     * @return An X509Certificate
+     * @throws CertdogException if there is an error obtaining the cert
+     */
     public X509Certificate requestCertFromCsr(String authToken, String issuerName, String teamName, String csrData,
                                      String extraInfo, List<String> extraEmails) throws CertdogException
     {
@@ -447,6 +544,14 @@ public class CertdogClient
         return getIssuerChain(this.authToken, issuerName);
     }
 
+    /**
+     * Gets the cert chain for the cert issuer
+     *
+     * @param authToken the JWT authentication token, returned from loginExt
+     * @param issuerName the name of the cert issuer
+     * @return an array of X509Certificate - intermediate and root CAs
+     * @throws CertdogException if there is an error obtaining the certificates
+     */
     public List<X509Certificate> getIssuerChain(String authToken, String issuerName) throws CertdogException
     {
         String path = String.format(CertdogEndpoints.ISSUER_CHAIN, issuerName);
@@ -499,6 +604,15 @@ public class CertdogClient
         revokeCert(this.authToken, issuerName, serialNumber, reason);
     }
 
+    /**
+     * Revokes a cert given the certificate serial number and issuer
+     *
+     * @param authToken the JWT authentication token, returned from loginExt
+     * @param issuerName the cert issuer name - must be the same as the cert was issued from
+     * @param serialNumber the serial number in ASCII HEX format
+     * @param reason the revocation reason
+     * @throws CertdogException if there is an error revoking
+     */
     public void revokeCert(String authToken, String issuerName, String serialNumber, RevocationReason reason) throws CertdogException
     {
         try
