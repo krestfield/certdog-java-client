@@ -2,18 +2,10 @@ package com.krestfield.certdog.client.model;
 
 public class GetCertResponse
 {
-    private String certId;
+    private String id;
+
+    private String pemCert;
     private String p12Data;
-
-    public String getCertId()
-    {
-        return certId;
-    }
-
-    public void setCertId(String certId)
-    {
-        this.certId = certId;
-    }
 
     public String getP12Data()
     {
@@ -23,5 +15,25 @@ public class GetCertResponse
     public void setP12Data(String p12Data)
     {
         this.p12Data = p12Data;
+    }
+
+    public String getPemCert()
+    {
+        return pemCert;
+    }
+
+    public void setPemCert(String pemCert)
+    {
+        this.pemCert = pemCert;
+    }
+
+    public String getId()
+    {
+        return id;
+    }
+
+    public void setId(String id)
+    {
+        this.id = id;
     }
 }

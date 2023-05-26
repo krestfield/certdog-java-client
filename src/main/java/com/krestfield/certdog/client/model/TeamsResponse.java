@@ -16,6 +16,12 @@ public class TeamsResponse
 
     private String[] adminUsernames;
 
+    private Boolean dontSendEmailsOnIssue;
+
+    private Boolean dontSendReminderEmails;
+
+    private String ipWhiteList;
+
     public String getId()
     {
         return id;
@@ -84,5 +90,35 @@ public class TeamsResponse
     public void setAdminUsernames(String[] adminUsernames)
     {
         this.adminUsernames = adminUsernames;
+    }
+
+    public Boolean getDontSendEmailsOnIssue()
+    {
+        return dontSendEmailsOnIssue;
+    }
+
+    public void setDontSendEmailsOnIssue(Boolean dontSendEmailsOnIssue)
+    {
+        this.dontSendEmailsOnIssue = dontSendEmailsOnIssue;
+    }
+
+    public Boolean getDontSendReminderEmails()
+    {
+        return dontSendReminderEmails;
+    }
+
+    public void setDontSendReminderEmails(Boolean dontSendReminderEmails)
+    {
+        this.dontSendReminderEmails = dontSendReminderEmails;
+    }
+
+    public String getIpWhiteList()
+    {
+        return ipWhiteList;
+    }
+
+    public void setIpWhiteList(String ipWhiteList)
+    {
+        this.ipWhiteList = ipWhiteList;
     }
 }

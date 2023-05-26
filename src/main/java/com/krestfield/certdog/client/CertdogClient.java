@@ -1,7 +1,6 @@
 package com.krestfield.certdog.client;
 
 import com.krestfield.certdog.client.model.GetCertFromCsrRequest;
-import com.krestfield.certdog.client.model.GetCertFromCsrResponse;
 import com.krestfield.certdog.client.model.GetCertRequest;
 import com.krestfield.certdog.client.model.GeneratorsResponse;
 import com.krestfield.certdog.client.model.GetCertResponse;
@@ -128,9 +127,14 @@ public class CertdogClient
      */
     public void login(String username, String password) throws CertdogException
     {
+        this.loggedIn = false;
+        this.authToken = loginRaw(username, password);
+        this.loggedIn = true;
+    }
+    public String loginRaw(String username, String password) throws CertdogException
+    {
         try
         {
-            loggedIn = false;
             LoginRequest login = new LoginRequest();
             login.setUsername(username);
             login.setPassword(password);
@@ -140,8 +144,7 @@ public class CertdogClient
                     .request(MediaType.APPLICATION_JSON)
                     .post(Entity.entity(login, MediaType.APPLICATION_JSON), LoginResponse.class);
 
-            this.authToken = resp.getToken();
-            loggedIn = true;
+            return resp.getToken();
         }
         catch (Exception e)
         {
@@ -156,9 +159,14 @@ public class CertdogClient
      */
     public void logout() throws CertdogException
     {
-        if (!loggedIn)
+        if (!this.loggedIn)
             return;
 
+        logout(this.authToken);
+    }
+
+    public void logout(String authToken) throws CertdogException
+    {
         Response resp = target.path(CertdogEndpoints.LOGOUT)
                 .request(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + authToken)
@@ -179,9 +187,14 @@ public class CertdogClient
      */
     public List<String> getTeams() throws CertdogException
     {
-        if (!loggedIn)
+        if (!this.loggedIn)
             throw new CertdogException("Not logged in. Call login");
 
+        return getTeams(this.authToken);
+    }
+
+    public List<String> getTeams(String authToken) throws CertdogException
+    {
         List<TeamsResponse> teams = target
                 .path(CertdogEndpoints.MY_TEAMS)
                 .request(MediaType.APPLICATION_JSON)
@@ -202,9 +215,14 @@ public class CertdogClient
      */
     public List<String> getIssuers() throws CertdogException
     {
-        if (!loggedIn)
+        if (!this.loggedIn)
             throw new CertdogException("Not logged in. Call login");
 
+        return getIssuers(this.authToken);
+    }
+
+    public List<String> getIssuers(String authToken) throws CertdogException
+    {
         List<String> issuerNames = target
                 .path(CertdogEndpoints.MY_ISSUERS)
                 .request(MediaType.APPLICATION_JSON)
@@ -223,8 +241,14 @@ public class CertdogClient
      */
     public List<String> getGenerators() throws CertdogException
     {
-        if (!loggedIn)
+        if (!this.loggedIn)
             throw new CertdogException("Not logged in. Call login");
+
+        return getGenerators(this.authToken);
+    }
+
+    public List<String> getGenerators(String authToken) throws CertdogException
+    {
 
         List<GeneratorsResponse> generators = target
                 .path(CertdogEndpoints.CSR_GENERATORS)
@@ -256,7 +280,14 @@ public class CertdogClient
                               String dn, String password, List<String> sans,
                               ResponseFormat format) throws CertdogException
     {
-        return requestCert(issuerName, generatorName, teamName, dn, password, sans, null, null, format);
+        return requestCert(this.authToken, issuerName, generatorName, teamName, dn, password, sans, format);
+    }
+
+    public String requestCert(String authToken, String issuerName, String generatorName, String teamName,
+                              String dn, String password, List<String> sans,
+                              ResponseFormat format) throws CertdogException
+    {
+        return requestCert(authToken, issuerName, generatorName, teamName, dn, password, sans, null, null, format);
     }
 
     /**
@@ -280,9 +311,16 @@ public class CertdogClient
                               String dn, String password, List<String> sans,
                               String extraInfo, List<String> extraEmails, ResponseFormat format) throws CertdogException
     {
-        if (!loggedIn)
+        if (!this.loggedIn)
             throw new CertdogException("Not logged in. Call login");
 
+        return requestCert(this.authToken, issuerName, generatorName, teamName, dn, password, sans, extraInfo, extraEmails, format);
+    }
+
+    public String requestCert(String authToken, String issuerName, String generatorName, String teamName,
+                              String dn, String password, List<String> sans,
+                              String extraInfo, List<String> extraEmails, ResponseFormat format) throws CertdogException
+    {
         try
         {
             GetCertRequest certReq = new GetCertRequest();
@@ -311,7 +349,7 @@ public class CertdogClient
                 String urlEndPoint = CertdogEndpoints.CERT_JKS_DATA;
                 if (format == ResponseFormat.PEM)
                     urlEndPoint = CertdogEndpoints.CERT_PEM_DATA;
-                String path = String.format(urlEndPoint, resp.getCertId());
+                String path = String.format(urlEndPoint, resp.getId());
 
                 String data = target
                         .path(path)
@@ -339,7 +377,12 @@ public class CertdogClient
      */
     public X509Certificate requestCertFromCsr(String issuerName, String teamName, String csrData) throws CertdogException
     {
-        return requestCertFromCsr(issuerName, teamName, csrData, null, null);
+        return requestCertFromCsr(this.authToken, issuerName, teamName, csrData);
+    }
+
+    public X509Certificate requestCertFromCsr(String authToken, String issuerName, String teamName, String csrData) throws CertdogException
+    {
+        return requestCertFromCsr(authToken, issuerName, teamName, csrData, null, null);
     }
 
     /**
@@ -354,10 +397,17 @@ public class CertdogClient
      * @throws CertdogException if there is an error obtaining the cert
      */
     public X509Certificate requestCertFromCsr(String issuerName, String teamName, String csrData,
+                                              String extraInfo, List<String> extraEmails) throws CertdogException
+    {
+        if (!this.loggedIn)
+            throw new CertdogException("Not logged in. Call login");
+
+        return requestCertFromCsr(this.authToken, issuerName, teamName, csrData, extraInfo, extraEmails);
+    }
+
+    public X509Certificate requestCertFromCsr(String authToken, String issuerName, String teamName, String csrData,
                                      String extraInfo, List<String> extraEmails) throws CertdogException
     {
-        if (!loggedIn)
-            throw new CertdogException("Not logged in. Call login");
 
         try
         {
@@ -368,11 +418,11 @@ public class CertdogClient
             certReq.setExtraInfo(extraInfo);
             certReq.setExtraEmails(extraEmails != null ? extraEmails.toArray(new String[]{}) : null);
 
-            GetCertFromCsrResponse resp = target
+            GetCertResponse resp = target
                     .path(CertdogEndpoints.CERT_REQ_CSR)
                     .request(MediaType.APPLICATION_JSON)
                     .header("Authorization", "Bearer " + authToken)
-                    .post(Entity.entity(certReq, MediaType.APPLICATION_JSON), GetCertFromCsrResponse.class);
+                    .post(Entity.entity(certReq, MediaType.APPLICATION_JSON), GetCertResponse.class);
 
             return GetCertFromData(resp.getPemCert());
         }
@@ -390,6 +440,14 @@ public class CertdogClient
      * @throws CertdogException if there is an error obtaining the certificates
      */
     public List<X509Certificate> getIssuerChain(String issuerName) throws CertdogException
+    {
+        if (!this.loggedIn)
+            throw new CertdogException("Not logged in. Call login");
+
+        return getIssuerChain(this.authToken, issuerName);
+    }
+
+    public List<X509Certificate> getIssuerChain(String authToken, String issuerName) throws CertdogException
     {
         String path = String.format(CertdogEndpoints.ISSUER_CHAIN, issuerName);
 
@@ -418,6 +476,10 @@ public class CertdogClient
      */
     public void revokeCert(String issuerName, X509Certificate cert, RevocationReason reason) throws CertdogException
     {
+        revokeCert(this.authToken, issuerName, cert, reason);
+    }
+    public void revokeCert(String authToken, String issuerName, X509Certificate cert, RevocationReason reason) throws CertdogException
+    {
         revokeCert(issuerName, cert.getSerialNumber().toString(16), reason);
     }
 
@@ -431,9 +493,14 @@ public class CertdogClient
      */
     public void revokeCert(String issuerName, String serialNumber, RevocationReason reason) throws CertdogException
     {
-        if (!loggedIn)
+        if (!this.loggedIn)
             throw new CertdogException("Not logged in. Call login");
 
+        revokeCert(this.authToken, issuerName, serialNumber, reason);
+    }
+
+    public void revokeCert(String authToken, String issuerName, String serialNumber, RevocationReason reason) throws CertdogException
+    {
         try
         {
             RevokeCertRequest revokeReq = new RevokeCertRequest();

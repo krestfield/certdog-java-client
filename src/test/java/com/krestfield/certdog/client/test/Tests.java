@@ -95,6 +95,33 @@ public class Tests
     }
 
     @Test
+    public void externallyManagedAuthToken() throws Exception
+    {
+        CertdogClient client = new CertdogClient(APIURL);
+        String authToken = client.loginRaw(APIUSER, APIPASS);
+
+        List<String> teamNames = client.getTeams(authToken);
+        List<String> issuers = client.getIssuers(authToken);
+        List<String> generators = client.getGenerators(authToken);
+
+        String pemData = client.requestCert(authToken, issuers.get(0), generators.get(0), teamNames.get(0),
+                "CN=client pem test", "password", null, null, null, ResponseFormat.PEM);
+        System.out.println("\nCert issued OK. PEM Data:\n" + pemData);
+
+        String p12Data = client.requestCert(authToken, issuers.get(0), generators.get(0), teamNames.get(0),
+                "CN=client pem test", "password", null, null, null, ResponseFormat.PKCS12);
+        System.out.println("\nCert issued OK. P12 Data:\n" + p12Data);
+
+        String jksData = client.requestCert(authToken, issuers.get(0), generators.get(0), teamNames.get(0),
+                "CN=client pem test", "password", null, null, null, ResponseFormat.JKS);
+        System.out.println("\nCert issued OK. JKS Data:\n" + jksData);
+
+
+        client.logout();
+
+    }
+
+    @Test
     public void getCertPem() throws Exception
     {
         CertdogClient client = new CertdogClient(APIURL);
